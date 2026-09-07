@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import javax.imageio.ImageIO;
 
-public class hw1pix {
+public class ImageToPixels {
 
     public static String convert(Color color) {
         int red = color.getRed();
