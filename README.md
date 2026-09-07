@@ -8,19 +8,19 @@ Screenshot of CS 240 pixelation code
 This CS 240 repository contains a variety of assignments from the CS 240 class, including a ASCII-to-Decimal Converter, Bitmap-to-Text-File Converter, Text-File-To-Bitmap-Converter, and a Base Number Converter.
 
 ASCII-to-Decimal Converter
-This ASCII to Decimal Converter allows the user to input a string (for example, their name), and returns a comma-delimited integer list of the ASCII Decimal values of each character in the input string.
+This ASCII to Decimal Converter allows the user to input a string (for example, their name), and returns a comma-delimited integer list of the ASCII Decimal values of each character in the input string
+
+Number-Base converter 
+The converter allows the user to enter a number and intedify its cirrent base and then displays the number in binary, decimal, octal, and hexadecimal. 
+
+Image-to-pixel Converter
+This converter reads smiley.png looks at its pixels and converts it to R,B,Y and out outputs it into output.txt
+
+Pixel-to-image Converter
+This converter reads the output from output.txt stores the values which are R,B,Y and converts it into pixels to create a new image. The new image is called recreated_smiley.png
 
 Contributing
 Students are welcome to contribute to this repository.
-
-Feedback
-TODO
-
-Related Projects
-TODO
-
-Code of Conduct
-TODO
 
 License
 Licensed under the MIT license.
