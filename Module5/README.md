@@ -1,114 +1,147 @@
-# Module 5: MIPS Assembler and Disassembler (FizzBuzz)
+# Module 5: MIPS Assembler and Disassembler
 
-Two Java programs that turn the course FizzBuzz program into machine code and back.
+Name: Jesus Resendiz
+Course: CS240
+Project: MIPS FizzBuzz
 
-- `Assembler.java` reads `fizzbuzz.asm` and writes `fizzbuzz.mhc-ascii` and `fizzbuzz.mhc-bin`.
-- `Disassembler.java` reads either of those files and writes a MIPS assembly file.
+## What this project does
 
-## Requirements
+For this project, I made an assembler and a disassembler in Java.
 
-- Java 8 or newer with the compiler (`javac`, part of the JDK).
-- Programs read and write real files, so run them from a terminal. A browser runtime such as Codevium cannot write files.
-- Python 3 is needed only for the optional test emulator `tests/mhc_run.py` and for `run_tests.sh`.
+- The assembler reads `fizzbuzz.asm` and creates machine code.
+- The disassembler reads the machine code and creates MIPS assembly again.
+- I tested the original program and the reconstructed program to make sure they produce the same FizzBuzz output.
+
+## What is needed
+
+- Java 8 or newer with `javac`.
+- Python 3 is only needed for the test script and test emulator.
+- Run the commands from inside the `Module5` folder.
 
 ## Files
 
 ```
-fizzbuzz.asm                   original FizzBuzz source (input)
-Assembler.java                 Part 3: assembler
-Disassembler.java              Part 4: disassembler
-fizzbuzz.mhc-ascii             assembler output, readable 0 and 1 characters
-fizzbuzz.mhc-bin               assembler output, raw bytes
-fizzbuzz.reconstructed.asm     disassembler output
-run_tests.sh, tests/           test script, test inputs, test emulator
-test_evidence.txt              output of run_tests.sh
+fizzbuzz.asm                  original FizzBuzz program
+Assembler.java                Part 3 assembler
+Disassembler.java             Part 4 disassembler
+fizzbuzz.mhc-ascii            machine code as readable 0s and 1s
+fizzbuzz.mhc-bin              machine code as raw binary bytes
+fizzbuzz.reconstructed.asm    assembly created by the disassembler
+run_tests.sh                  test script
+tests/                        test programs and emulator
+test_evidence.txt             test results
+mars_fizzbuzz_output.png      MARS output screenshot
 ```
 
-## How to run
+## How to run the programs
+
+First compile both Java programs:
 
 ```
 javac Assembler.java Disassembler.java
+```
 
+Assemble the original FizzBuzz program:
+
+```
 java Assembler fizzbuzz.asm
-java Disassembler fizzbuzz.mhc-bin   fizzbuzz.reconstructed.asm
-java Disassembler fizzbuzz.mhc-ascii other.asm
-
-java Assembler fizzbuzz.reconstructed.asm check/fizzbuzz
-cmp fizzbuzz.mhc-bin check/fizzbuzz.mhc-bin
 ```
 
-- `java Assembler [--listing] <input.asm> [output-base]` writes `<output-base>.mhc-ascii` and `<output-base>.mhc-bin`. The base name defaults to the input path without `.asm`. `--listing` also prints each instruction with its source line, pseudoinstruction expansion, type (R, I or J) and bit fields.
-- `java Disassembler <input> [output.asm]` detects the format on its own. The output name defaults to `<input>.asm`.
-- On Windows use `fc /b a b` instead of `cmp a b`.
-- `bash run_tests.sh` runs every test and prints a PASS or FAIL line for each (27 checks).
+This creates:
 
-## Supported features
+- `fizzbuzz.mhc-ascii`
+- `fizzbuzz.mhc-bin`
 
-- Instructions: add, addi, addiu, addu, sub, ori, lui, div, mfhi, sll, beq, bne, j, jal, jr, lw, sw, syscall.
-- Pseudoinstructions: li, la, move, rem (nonzero immediate divisor, uses $at), nop.
-- Directives: .text, .data, .asciiz (one ASCII string per directive), .globl, .global.
-- Labels (code and data), `#` comments, decimal, hex (0x) and character ('A', '\n') immediates, registers by name ($t0) or number ($8).
-- Not supported: every other instruction or directive. They are reported as errors.
-
-## Addresses, byte order and timing
-
-- Text segment starts at 0x00400000. Data segment starts at 0x10010000.
-- Entry address is the label `main` (the text base if there is no `main`).
-- All 32-bit words and all header fields are big-endian: the most significant byte comes first.
-- No delay slots (delayed branching off), which is the MARS default.
-
-## File layout: .mhc-bin
-
-All numbers are 32-bit big-endian.
+Disassemble the binary file:
 
 ```
-offset  size  field
-0       4     magic "MHCB" (0x4D 0x48 0x43 0x42)
-4       4     text base address   (0x00400000)
-8       4     text size in bytes  (4 x number of instructions)
-12      4     data base address   (0x10010000)
-16      4     data size in bytes
-20      4     entry address
-24      T     text: one 4-byte word per instruction
-24+T    D     data: raw bytes of the .asciiz strings, NUL terminators included
+java Disassembler fizzbuzz.mhc-bin fizzbuzz.reconstructed.asm
 ```
 
-For FizzBuzz: 24 + 180 + 10 = 214 bytes.
-
-## File layout: .mhc-ascii
+Disassemble the ASCII file:
 
 ```
-MHC-ASCII 1
-ORDER big-endian
-ENTRY 0x00400000
-TEXT 0x00400000 words=45     <- 45 lines, each exactly 32 characters of 0 and 1
-DATA 0x10010000 bytes=10     <- 8-character groups, up to 4 per line
-END
+java Disassembler fizzbuzz.mhc-ascii from_ascii.asm
 ```
 
-## Telling instructions from data
-
-Both formats carry the sizes of the two segments. In `.mhc-bin` the header gives the text size and data size, so the first T bytes after the header are instructions and the rest are data. In `.mhc-ascii` the `TEXT` and `DATA` header lines start each section and give its word or byte count. The disassembler checks these counts and rejects files that disagree with them.
-
-## What the disassembler reconstructs
-
-- Each NUL-terminated string in the data segment becomes `str_N: .asciiz "..."`.
-- Each instruction word becomes one real instruction. A target of a branch or jump gets a label (`L_` plus its address); the entry address is named `main`.
-- A `lui` and `ori` pair that loads the address of a string is written as `la`. `sll $zero, $zero, 0` is written as `nop`.
-- Comments, original label names and the pseudoinstructions `li`, `move` and `rem` are not recovered. The real instructions they expand to are written instead, so assembling the reconstructed file gives identical bytes.
-
-## Errors
-
-Invalid input stops the program with exit status 1, writes a message to standard error and creates no output files. Examples:
+To assemble the reconstructed program and compare the binary files:
 
 ```
-Assembly failed: bad.asm: line 3: Unsupported instruction: mul (supported: ...)  [mul $t1, $t0, $t0]
-Assembly failed: bad.asm: line 3: Undefined label: Missing  [j Missing]
-Disassembly failed: bad.mhc-bin: File size mismatch: the header declares 180 text bytes and 10 data bytes (214 bytes in total) but the file has 100 bytes.
+java Assembler fizzbuzz.reconstructed.asm rebuilt
+cmp fizzbuzz.mhc-bin rebuilt.mhc-bin
 ```
+
+The `cmp` command should not print anything when the files are identical. On Windows, use `fc /b` instead of `cmp`.
+
+To run all tests:
+
+```
+bash run_tests.sh
+```
+
+The test script runs 27 checks, including normal input, invalid input, both machine-code formats, disassembly, and the round trip.
+
+## Features supported by my assembler
+
+Instructions:
+
+`add`, `addi`, `addiu`, `addu`, `sub`, `ori`, `lui`, `div`, `mfhi`, `sll`, `beq`, `bne`, `j`, `jal`, `jr`, `lw`, `sw`, and `syscall`.
+
+Pseudoinstructions:
+
+`li`, `la`, `move`, `rem`, and `nop`.
+
+Directives and other features:
+
+- `.text` and `.data`
+- `.asciiz` strings
+- `.globl` and `.global`
+- Labels in the text and data sections
+- Comments beginning with `#`
+- Decimal, hexadecimal, and character values
+- Registers such as `$t0` or register numbers such as `$8`
+
+Instructions or directives outside this list are rejected with an error message.
+
+## Addresses and byte order
+
+- The text section starts at `0x00400000`.
+- The data section starts at `0x10010000`.
+- The entry point is the `main` label.
+- Words and header fields use big-endian byte order. The most significant byte comes first.
+- Delayed branching is off, which matches the MARS setting used for this project.
+
+## Machine-code file formats
+
+The `.mhc-bin` file is a binary file. It starts with a 24-byte header:
+
+```
+4 bytes   magic value MHCB
+4 bytes   text starting address
+4 bytes   text size
+4 bytes   data starting address
+4 bytes   data size
+4 bytes   entry address
+```
+
+After the header are the instruction bytes followed by the data bytes.
+
+The `.mhc-ascii` file is a text file. It has `TEXT` and `DATA` sections. Each instruction is written as 32 readable `0` and `1` characters. The section sizes show the disassembler where the instructions end and the data begins.
+
+For this FizzBuzz program, there are 45 instructions and 10 data bytes. The binary file is 214 bytes total: 24 header bytes, 180 instruction bytes, and 10 data bytes.
+
+## Disassembler result
+
+The disassembler can read either machine-code format. It creates real MIPS instructions and new labels when needed. It does not recover the original comments, label names, or pseudoinstruction spellings.
+
+The reconstructed program was assembled again, and its machine-code bytes matched the original files. The program also produced the correct FizzBuzz output in the test emulator and in MARS. The MARS screenshot is included as `mars_fizzbuzz_output.png`.
+
+## Error handling
+
+Invalid input is rejected with a useful error message. The tests include unsupported instructions, bad directives, duplicate labels, undefined labels, invalid registers, out-of-range values, bad machine-code files, and missing files.
 
 ## Sources and collaboration
 
-- `Assembler.java` is based on the starter assembler provided by the instructor. It was extended here to read files, write the two output formats, report errors with line numbers, and support add and sub.
-- `Disassembler.java`, `run_tests.sh` and `tests/mhc_run.py` were written for this project with help from Claude (an AI assistant made by Anthropic).
-- Student: [your name]. Edit this section to match your course's collaboration policy.
+I started with the assembler code provided by my instructor. I extended it so it could read a source file, create both required machine-code formats, and report errors.
+
+I used Claude and ChatGPT/Codex to help me understand the assignment, organize the project, write and debug parts of the code, and test the assembler and disassembler. I reviewed the code and ran the tests myself.
